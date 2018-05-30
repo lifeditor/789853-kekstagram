@@ -1,8 +1,7 @@
 # Личный проект «Кекстаграм» [![Build status][travis-image]][travis-url]
 
 * Студент: [Денис Кузнецов](https://up.htmlacademy.ru/javascript/14/user/789853).
-* Наставник: `Неизвестно`.
-
+* Наставник: [Игорь Шевченко](https://up.htmlacademy.ru/javascript/14/user/149304). 
 ---
 
 _Не удаляйте и не обращайте внимание на файлы:_<br>
