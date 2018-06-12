@@ -7,9 +7,10 @@ var LIKES_MAX = 200;
 var AVATAR_COUNT = 6;
 
 var PICTURE = '.picture';
-var TEMPLATE_ID = '#picture';
+var PICTURE_TEMPLATE = '#picture';
+var SOCIAL_TEMPLATE = '#social__comment';
 var BIG_PICTURE = '.big-picture';
-var CSS_PREFIX = 'social';
+var CSS_PREFIX = '.social';
 
 var descriptions = [
   'Тестим новую камеру!',
@@ -29,38 +30,37 @@ var comments = [
   'Лица у людей на фотке перекошены, как будто их избивают. Как можно было поймать такой неудачный момент?!'
 ];
 
-var pictures = [];
-var pictureList = document.querySelector(PICTURE + 's');
-var bigPicture = document.querySelector(BIG_PICTURE);
-var commentList = bigPicture.querySelector('.' + CSS_PREFIX + '__comments');
-var commentCollection = commentList.children;
-var element = commentCollection[0].cloneNode(true);
-
 var generateRandom = function (min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
-var createPictureElement = function (picture) {
-  var pictureTemplate = document.querySelector(TEMPLATE_ID)
-    .content
-    .querySelector(PICTURE + '__link');
-  var pictureElement = pictureTemplate.cloneNode(true);
-  pictureElement.querySelector(PICTURE + '__img')['src'] = picture.url;
-  pictureElement.querySelector(PICTURE + '__stat--likes')
-    .textContent = picture.likes;
-  pictureElement.querySelector(PICTURE + '__stat--comments')
-    .textContent = picture.comments.length;
-  return pictureElement;
+var generateUniqueComment = function (arrays) {
+  var arrayCount = arrays.length;
+  var string;
+  var commentCount = comments.length;
+  var flag;
+  do {
+    flag = 0;
+    string = comments[generateRandom(0, commentCount - 1)];
+    for (var i = 0; i < arrayCount; i++) {
+      if (arrays[i] === string) {
+        flag = 1;
+        break;
+      }
+    }
+  } while (flag === 1);
+  return string;
 };
 
-var fillPictureList = function () {
-  var fragment = document.createDocumentFragment();
+var createPictures = function () {
+  var pictures = [];
 
   for (var i = 0; i < PICTURE_COUNT; i++) {
     var pictureObj = {};
     var strings = [];
+
     for (var cnt = 0; cnt < COMMENT_COUNT; cnt++) {
-      strings[cnt] = comments[generateRandom(0, comments.length - 1)];
+      strings[cnt] = generateUniqueComment(strings);
     }
     pictureObj.url = 'photos/' + (i + 1) + '.jpg';
     pictureObj.likes = generateRandom(LIKES_MIN, LIKES_MAX);
@@ -68,45 +68,81 @@ var fillPictureList = function () {
     pictureObj.description =
       descriptions[generateRandom(0, descriptions.length - 1)];
     pictures[i] = pictureObj;
-    fragment.appendChild(createPictureElement(pictures[i]));
+  }
+  return pictures;
+};
+
+var setupPictureElement = function (picture, element) {
+  element.querySelector(PICTURE + '__img')['src'] = picture.url;
+  element.querySelector(PICTURE + '__stat--likes')
+    .textContent = picture.likes;
+  element.querySelector(PICTURE + '__stat--comments')
+    .textContent = picture.comments.length;
+  return element;
+};
+
+var setupCommentElement = function (comment, element) {
+  var textNode = document.createTextNode(comment);
+
+  element.querySelector(CSS_PREFIX + '__picture')['src'] =
+    'img/avatar-' + generateRandom(1, AVATAR_COUNT) + '.svg';
+  element.appendChild(textNode);
+  return element;
+};
+
+var createElementList = function (arrays, templateID) {
+  var selector = (templateID === PICTURE_TEMPLATE) ?
+    '.picture__link' : '.social__comment';
+  var elementTemplate = document.querySelector(templateID)
+    .content
+    .querySelector(selector);
+  var fragment = document.createDocumentFragment();
+
+  for (var i = 0; i < arrays.length; i++) {
+    var element = elementTemplate.cloneNode(true);
+
+    fragment.appendChild(
+        (templateID === PICTURE_TEMPLATE) ?
+          setupPictureElement(arrays[i], element) :
+          setupCommentElement(arrays[i], element)
+    );
   }
   return fragment;
 };
 
-pictureList.appendChild(fillPictureList());
+var changeHidden = function (bigPicture) {
+  bigPicture
+    .classList.remove('hidden');
+  bigPicture.querySelector(CSS_PREFIX + '__comment-count')
+    .classList.add('visually-hidden');
+  bigPicture.querySelector(CSS_PREFIX + '__loadmore')
+    .classList.add('visually-hidden');
+};
 
-var activePicture = pictures[0];
-var commentCount = activePicture.comments.length;
+var setupBigPicture = function (picture) {
+  var bigPicture = document.querySelector(BIG_PICTURE);
+  var commentList = bigPicture
+    .querySelector(CSS_PREFIX + '__comments');
 
-bigPicture.classList.remove('hidden');
-bigPicture.querySelector(BIG_PICTURE + '__img')
-  .children[0]['src'] = activePicture.url;
-bigPicture.querySelector('.likes-count').textContent = activePicture.likes;
-bigPicture.querySelector('.comments-count').textContent = commentCount;
-bigPicture.querySelector('.' + CSS_PREFIX + '__caption')
-  .textContent = activePicture.description;
+  bigPicture.querySelector(BIG_PICTURE + '__img')
+    .children[0]['src'] = picture.url;
+  bigPicture.querySelector('.likes-count')
+    .textContent = picture.likes;
+  bigPicture.querySelector('.comments-count')
+    .textContent = picture.comments.length;
+  bigPicture.querySelector(CSS_PREFIX + '__caption')
+    .textContent = picture.description;
 
-// если количество элементов блока .social__comments больше,
-// чем в массиве с комментариями, то удаляем лишние элементы в блоке
-while (commentCollection.length > commentCount) {
-  commentList
-    .removeChild(commentCollection[commentCollection.length - 1]);
-}
-
-for (var i = 0; i < commentCount; i++) {
-  var textNode = document.createTextNode(activePicture.comments[i]);
-
-  if (i > commentCollection.length - 1) {
-    commentList.appendChild(element);
+  while (commentList.firstChild) {
+    commentList.removeChild(commentList.firstChild);
   }
-  commentCollection[i].classList.add(CSS_PREFIX + '__comment--text');
-  commentCollection[i].querySelector('.' + CSS_PREFIX + '__text').remove();
-  commentCollection[i].querySelector('.' + CSS_PREFIX + '__picture')['src'] =
-    'img/avatar-' + generateRandom(1, AVATAR_COUNT) + '.svg';
-  commentCollection[i].appendChild(textNode);
-}
+  commentList
+    .appendChild(createElementList(picture.comments, SOCIAL_TEMPLATE));
+  changeHidden(bigPicture);
+};
 
-bigPicture.querySelector('.' + CSS_PREFIX + '__comment-count')
-  .classList.add('visually-hidden');
-bigPicture.querySelector('.' + CSS_PREFIX + '__loadmore')
-  .classList.add('visually-hidden');
+var pictures = createPictures();
+
+document.querySelector('.pictures')
+  .appendChild(createElementList(pictures, PICTURE_TEMPLATE));
+setupBigPicture(pictures[0]);
