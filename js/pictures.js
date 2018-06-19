@@ -18,6 +18,7 @@ var RESIZE_MIN = 25;
 var RESIZE_MAX = 100;
 var RESIZE_STEP = 25;
 var DEFAULT_EFFECT_LEVEL = 100;
+var DEFAULT_EFFECT = 'effects__preview--none';
 
 var descriptions = [
   'Тестим новую камеру!',
@@ -36,6 +37,15 @@ var comments = [
   'Я поскользнулся на банановой кожуре и уронил фотоаппарат на кота и у меня получилась фотография лучше.',
   'Лица у людей на фотке перекошены, как будто их избивают. Как можно было поймать такой неудачный момент?!'
 ];
+
+var filterStyle = {
+  'effects__preview--none': {filter: 'filter: none;'},
+  'effects__preview--chrome': {filter: 'filter: grayscale(', div: 100, mult: 1, add: 0, eofl: ');'},
+  'effects__preview--sepia': {filter: 'filter: sepia(', div: 100, mult: 1, add: 0, eofl: ');'},
+  'effects__preview--marvin': {filter: 'filter: invert(', div: 1, mult: 1, add: 0, eofl: '%);'},
+  'effects__preview--phobos': {filter: 'filter: blur(', div: 100, mult: 3, add: 0, eofl: 'px);'},
+  'effects__preview--heat': {filter: 'filter: brightness(', div: 100, mult: 2, add: 1, eofl: ');'}
+};
 
 var pictureContainer = document.querySelector('.pictures');
 var bigPicture = document.querySelector(BIG_PICTURE);
@@ -56,7 +66,8 @@ var scaleInput = uploadScale.querySelector('.scale__value');
 var resizeMinus = uploadPopup.querySelector('.resize__control--minus');
 var resizePlus = uploadPopup.querySelector('.resize__control--plus');
 var resizeInput = uploadPopup.querySelector('.resize__control--value');
-var resizeValue = RESIZE_MAX;
+var resize = RESIZE_MAX;
+var cssStyle = {};
 
 var generateRandom = function (min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -104,6 +115,7 @@ var createPictures = function () {
 
 var setupPictureElement = function (picture, element) {
   var image = element.querySelector(PICTURE + '__img');
+
   image.src = picture.url;
   image.id = picture.id;
   element.querySelector(PICTURE + '__stat--likes')
@@ -174,28 +186,41 @@ var setupBigPicture = function (picture) {
   showBigPicture();
 };
 
+var setStyles = function (element, style) {
+  uploadPreview.style = style.filter + style.transform;
+};
+
 var setupEffectLevel = function (level) {
+  var ifOriginal = uploadPreview.classList.contains(DEFAULT_EFFECT);
+  var css = filterStyle[uploadPreview.classList[1]];
+
   scaleInput.setAttribute('value', level);
   scaleLevel.style = 'width: ' + level + '%;';
   scalePin.style = 'left: ' + level + '%;';
+  cssStyle.filter = (ifOriginal) ? css.filter :
+    css.filter + (level / css.div * css.mult + css.add) + css.eofl;
+  uploadScale.classList // для оригинального изображения скрываем ползунок
+    .toggle('hidden', ifOriginal);
+  setStyles(uploadPreview, cssStyle);
 };
 
-var setupPreviewSize = function (value) {
-  resizeInput.setAttribute('value', value + '%');
-  uploadPreview.style = 'transform: scale(' + (value / 100) + ');';
+var setupPreviewSize = function (size) {
+  resizeInput.setAttribute('value', size + '%');
+  cssStyle.transform = 'transform: scale(' + (size / 100) + ');';
+  setStyles(uploadPreview, cssStyle);
 };
 
 var showUploadPopup = function () {
+  uploadPreview.classList.add(DEFAULT_EFFECT);
   setupPreviewSize(RESIZE_MAX);
   setupEffectLevel(DEFAULT_EFFECT_LEVEL);
-  uploadPreview.classList.remove(uploadPreview.classList[1]);
   uploadPopup.classList.remove('hidden');
   document.addEventListener('keydown', onUploadPopupEscPress);
 };
 
 var hideUploadPopup = function () {
-  resizeValue = RESIZE_MAX;
-  uploadInput.value = ''; // cброс значения поля для правильной обработки onUploadFileChange
+  uploadInput.value = ''; // cброс значения поля для правильной обработки change
+  uploadPreview.classList.remove(uploadPreview.classList[1]);
   uploadPopup.classList.add('hidden');
   document.removeEventListener('keydown', onUploadPopupEscPress);
 };
@@ -215,7 +240,7 @@ var onBigPictureEscPress = function (evt) {
 var onDocumentBodyClick = function (evt) {
   var target = evt.target;
 
-  if (target.className === 'picture__img') {
+  if (target.classList.contains('picture__img')) {
     setupBigPicture(pictures[target.id]);
   }
 };
@@ -223,38 +248,21 @@ var onDocumentBodyClick = function (evt) {
 var onUploadPopupClick = function (evt) {
   var target = evt.target;
 
-  if (target.classList[0] === 'effects__preview') {
-    setupEffectLevel(DEFAULT_EFFECT_LEVEL);
-    if (target.classList[1] === 'effects__preview--none') {
-      uploadScale.classList.add('hidden'); // для оригинального изображения скрываем ползунок
-    } else {
-      uploadScale.classList.remove('hidden');
-    }
+  if (target.classList.contains('effects__preview')) {
     uploadPreview.classList.remove(uploadPreview.classList[1]);
     uploadPreview.classList.add(target.classList[1]);
+    setupEffectLevel(DEFAULT_EFFECT_LEVEL);
   }
-};
-
-var onCloseUploadPopupClick = function () {
-  hideUploadPopup();
-};
-
-var onCloseBigPictureClick = function () {
-  hideBigPicture();
 };
 
 var onResizePreviewClick = function (evt) {
-  resizeValue += (evt.target === resizePlus) ? RESIZE_STEP : -RESIZE_STEP;
-  if (resizeValue > RESIZE_MAX) {
-    resizeValue = RESIZE_MAX;
-  } else if (resizeValue < RESIZE_MIN) {
-    resizeValue = RESIZE_MIN;
+  resize += (evt.target === resizePlus) ? RESIZE_STEP : -RESIZE_STEP;
+  if (resize > RESIZE_MAX) {
+    resize = RESIZE_MAX;
+  } else if (resize < RESIZE_MIN) {
+    resize = RESIZE_MIN;
   }
-  setupPreviewSize(resizeValue);
-};
-
-var onUploadFileChange = function () {
-  showUploadPopup();
+  setupPreviewSize(resize);
 };
 
 var onScaleLineMouseUp = function (evt) {
@@ -263,11 +271,11 @@ var onScaleLineMouseUp = function (evt) {
 
 document.addEventListener('click', onDocumentBodyClick);
 uploadPopup.addEventListener('click', onUploadPopupClick);
-closeUploadPopup.addEventListener('click', onCloseUploadPopupClick);
-closeBigPicture.addEventListener('click', onCloseBigPictureClick);
+closeUploadPopup.addEventListener('click', hideUploadPopup);
+closeBigPicture.addEventListener('click', hideBigPicture);
 resizeMinus.addEventListener('click', onResizePreviewClick);
 resizePlus.addEventListener('click', onResizePreviewClick);
-uploadFile.addEventListener('change', onUploadFileChange);
+uploadFile.addEventListener('change', showUploadPopup);
 scaleLine.addEventListener('mouseup', onScaleLineMouseUp);
 
 var pictures = createPictures();
