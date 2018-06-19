@@ -62,7 +62,6 @@ var scaleLine = uploadScale.querySelector('.scale__line');
 var scalePin = uploadScale.querySelector('.scale__pin');
 var scaleLevel = uploadScale.querySelector('.scale__level');
 var scaleInput = uploadScale.querySelector('.scale__value');
-// var defaultEffectLevel = scaleInput.value;
 var resizeMinus = uploadPopup.querySelector('.resize__control--minus');
 var resizePlus = uploadPopup.querySelector('.resize__control--plus');
 var resizeInput = uploadPopup.querySelector('.resize__control--value');
@@ -162,10 +161,6 @@ var hideBigPicture = function () {
 var showBigPicture = function () {
   bigPicture.classList.remove('hidden');
   document.addEventListener('keydown', onBigPictureEscPress);
-  // bigPicture.querySelector(CSS_PREFIX + '__comment-count')
-  //  .classList.add('visually-hidden');
-  // bigPicture.querySelector(CSS_PREFIX + '__loadmore')
-  //  .classList.add('visually-hidden');
 };
 
 var setupBigPicture = function (picture) {
@@ -219,6 +214,7 @@ var showUploadPopup = function () {
 };
 
 var hideUploadPopup = function () {
+  resize = RESIZE_MAX;
   uploadInput.value = ''; // cброс значения поля для правильной обработки change
   uploadPreview.classList.remove(uploadPreview.classList[1]);
   uploadPopup.classList.add('hidden');
