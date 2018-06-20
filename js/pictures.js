@@ -19,6 +19,9 @@ var RESIZE_MAX = 100;
 var RESIZE_STEP = 25;
 var DEFAULT_EFFECT_LEVEL = 100;
 var DEFAULT_EFFECT = 'effects__preview--none';
+var HASHTAG_MAX_LENGTH = 20;
+var DESCRIPTION_MAX_LENGTH = 140;
+var DESCRIPTION_ERROR = 'Длина описания больше 140 символов';
 
 var descriptions = [
   'Тестим новую камеру!',
@@ -53,10 +56,10 @@ var closeBigPicture = bigPicture.querySelector('.big-picture__cancel');
 var commentList = bigPicture.querySelector(CSS_PREFIX + '__comments');
 var uploadPopup = pictureContainer.querySelector('.img-upload__overlay');
 var uploadFile = pictureContainer.querySelector('.img-upload__start');
-var uploadInput = uploadFile.querySelector('.img-upload__input');
+var uploadFileInput = uploadFile.querySelector('.img-upload__input');
 var closeUploadPopup = uploadPopup.querySelector('.img-upload__cancel');
 var uploadPreview = uploadPopup.querySelector('.img-upload__preview');
-var uploadComment = uploadPopup.querySelector('.text__description');
+var commentInput = uploadPopup.querySelector('.text__description');
 var uploadScale = uploadPopup.querySelector('.img-upload__scale');
 var scaleLine = uploadScale.querySelector('.scale__line');
 var scalePin = uploadScale.querySelector('.scale__pin');
@@ -65,6 +68,10 @@ var scaleInput = uploadScale.querySelector('.scale__value');
 var resizeMinus = uploadPopup.querySelector('.resize__control--minus');
 var resizePlus = uploadPopup.querySelector('.resize__control--plus');
 var resizeInput = uploadPopup.querySelector('.resize__control--value');
+var hashtagInput = uploadPopup.querySelector('.text__hashtags');
+var uploadPopupinputs =
+  uploadPopup.querySelectorAll('.text__hashtags, .text__description');
+var buttonUploadSubmit = uploadPopup.querySelector('.img-upload__submit');
 var resize = RESIZE_MAX;
 var cssStyle = {};
 
@@ -215,14 +222,19 @@ var showUploadPopup = function () {
 
 var hideUploadPopup = function () {
   resize = RESIZE_MAX;
-  uploadInput.value = ''; // cброс значения поля для правильной обработки change
+  uploadFileInput.value = ''; // cброс значения поля для правильной обработки change
   uploadPreview.classList.remove(uploadPreview.classList[1]);
   uploadPopup.classList.add('hidden');
   document.removeEventListener('keydown', onUploadPopupEscPress);
+  hashtagInput.value = '';
+  commentInput.value = '';
+  commentInput.style = '';
+  hashtagInput.style = '';
 };
 
 var onUploadPopupEscPress = function (evt) {
-  if (evt.keyCode === ESC_KEYCODE && document.activeElement !== uploadComment) {
+  if (evt.keyCode === ESC_KEYCODE && document.activeElement !== commentInput
+      && document.activeElement !== hashtagInput) {
     hideUploadPopup();
   }
 };
@@ -278,3 +290,77 @@ var pictures = createPictures();
 
 pictureContainer
   .appendChild(createElementList(pictures, PICTURE_TEMPLATE));
+
+var checkHashtagErrors = function (hashtagString) {
+  var errorString = '';
+  var hashtags = [];
+  var uniques = [];
+  var dividerChar = ' ';
+  var startChar = '#';
+
+  if (hashtagString.length > 0) {
+    hashtags = hashtagString.toLowerCase().split(dividerChar);
+
+    for (var i = 0; i < hashtags.length; i++) {
+      if (uniques.indexOf(hashtags[i]) === -1) {
+        uniques.push(hashtags[i]);
+      }
+      if (hashtags[i][0] !== startChar) {
+        errorString += hashtags[i] + ' - Хеш-тег должен начинаться с #\n\r';
+      }
+      if (hashtags[i].length > HASHTAG_MAX_LENGTH) {
+        errorString += hashtags[i] + ' - Длина хэш-тега превышает 20 символов\n\r';
+      } else if (hashtags[i] === startChar) {
+        errorString += hashtags[i] + ' - Хеш-тег введен неправильно\n\r';
+      } else if (hashtags[i].indexOf(startChar, 1) > 0) {
+        errorString += hashtags[i] + ' - Хэш-теги должны разделяться пробелом\n\r';
+      } else if (hashtags[i].length === 0) {
+        errorString += hashtags[i] + ' - Найдены лишние пробелы\n\r';
+      }
+    }
+    if (uniques.length < hashtags.length) {
+      errorString += ' - Найдены повторяющиеся хэш-теги\n\r';
+    }
+    if (hashtags.length > 5) {
+      errorString += ' - Допускается использование не более 5 хэш-тегов\n\r';
+    }
+  }
+  return errorString;
+};
+
+var checkInputsValidity = function () {
+  var flag = true;
+
+  for (var i = 0; i < uploadPopupinputs.length; i++) {
+    if (uploadPopupinputs[i].checkValidity() === false) {
+      uploadPopupinputs[i].style = 'border: 3px solid red;';
+      flag = false;
+    } else {
+      uploadPopupinputs[i].style = '';
+    }
+  }
+  return flag;
+};
+
+hashtagInput.addEventListener('input', function (evt) {
+  var target = evt.target;
+  target.setCustomValidity(checkHashtagErrors(target.value));
+  checkInputsValidity();
+});
+
+commentInput.addEventListener('input', function (evt) {
+  var target = evt.target;
+
+  if (target.value.length > DESCRIPTION_MAX_LENGTH) {
+    target.setCustomValidity(DESCRIPTION_ERROR);
+  } else {
+    target.setCustomValidity('');
+  }
+  checkInputsValidity();
+});
+
+buttonUploadSubmit.addEventListener('click', function (evt) {
+  if (!checkInputsValidity()) {
+    evt.preventDefault();
+  }
+});
