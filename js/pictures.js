@@ -226,8 +226,6 @@ var hideUploadPopup = function () {
   uploadPreview.classList.remove(uploadPreview.classList[1]);
   uploadPopup.classList.add('hidden');
   document.removeEventListener('keydown', onUploadPopupEscPress);
-  hashtagInput.value = '';
-  commentInput.value = '';
   commentInput.style = '';
   hashtagInput.style = '';
 };
@@ -305,23 +303,21 @@ var checkHashtagErrors = function (hashtagString) {
       if (uniques.indexOf(hashtags[i]) === -1) {
         uniques.push(hashtags[i]);
       }
-      if (hashtags[i][0] !== startChar) {
+      if (hashtags[i].length === 0) {
+        errorString += 'Найден лишний пробел\n\r';
+      } else if (hashtags[i][0] !== startChar) {
         errorString += hashtags[i] + ' - Хеш-тег должен начинаться с #\n\r';
-      }
-      if (hashtags[i].length > HASHTAG_MAX_LENGTH) {
+      } else if (hashtags[i].length > HASHTAG_MAX_LENGTH) {
         errorString += hashtags[i] + ' - Длина хэш-тега превышает 20 символов\n\r';
       } else if (hashtags[i] === startChar) {
         errorString += hashtags[i] + ' - Хеш-тег введен неправильно\n\r';
       } else if (hashtags[i].indexOf(startChar, 1) > 0) {
         errorString += hashtags[i] + ' - Хэш-теги должны разделяться пробелом\n\r';
-      } else if (hashtags[i].length === 0) {
-        errorString += hashtags[i] + ' - Найдены лишние пробелы\n\r';
       }
     }
     if (uniques.length < hashtags.length) {
       errorString += ' - Найдены повторяющиеся хэш-теги\n\r';
-    }
-    if (hashtags.length > 5) {
+    } else if (hashtags.length > 5) {
       errorString += ' - Допускается использование не более 5 хэш-тегов\n\r';
     }
   }
@@ -342,9 +338,8 @@ var checkInputsValidity = function () {
   return flag;
 };
 
-hashtagInput.addEventListener('input', function (evt) {
-  var target = evt.target;
-  target.setCustomValidity(checkHashtagErrors(target.value));
+hashtagInput.addEventListener('input', function () {
+  hashtagInput.setCustomValidity(checkHashtagErrors(hashtagInput.value));
   checkInputsValidity();
 });
 
