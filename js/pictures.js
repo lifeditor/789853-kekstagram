@@ -62,7 +62,7 @@ var uploadPreview = uploadPopup.querySelector('.img-upload__preview');
 var commentInput = uploadPopup.querySelector('.text__description');
 var uploadScale = uploadPopup.querySelector('.img-upload__scale');
 var scaleLine = uploadScale.querySelector('.scale__line');
-var scalePin = uploadScale.querySelector('.scale__pin');
+var scalePinHandler = uploadScale.querySelector('.scale__pin');
 var scaleLevel = uploadScale.querySelector('.scale__level');
 var scaleInput = uploadScale.querySelector('.scale__value');
 var resizeMinus = uploadPopup.querySelector('.resize__control--minus');
@@ -198,7 +198,7 @@ var setupEffectLevel = function (level) {
 
   scaleInput.setAttribute('value', level);
   scaleLevel.style = 'width: ' + level + '%;';
-  scalePin.style = 'left: ' + level + '%;';
+  scalePinHandler.style = 'left: ' + level + '%;';
   cssStyle.filter = (ifOriginal) ? css.filter :
     css.filter + (level / css.div * css.mult + css.add) + css.eofl;
   uploadScale.classList // для оригинального изображения скрываем ползунок
@@ -271,10 +271,6 @@ var onResizePreviewClick = function (evt) {
   setupPreviewSize(resize);
 };
 
-var onScaleLineMouseUp = function (evt) {
-  setupEffectLevel(Math.floor(evt.offsetX / scaleLine.clientWidth * 100));
-};
-
 document.addEventListener('click', onDocumentBodyClick);
 uploadPopup.addEventListener('click', onUploadPopupClick);
 closeUploadPopup.addEventListener('click', hideUploadPopup);
@@ -282,7 +278,6 @@ closeBigPicture.addEventListener('click', hideBigPicture);
 resizeMinus.addEventListener('click', onResizePreviewClick);
 resizePlus.addEventListener('click', onResizePreviewClick);
 uploadFile.addEventListener('change', showUploadPopup);
-scaleLine.addEventListener('mouseup', onScaleLineMouseUp);
 
 var pictures = createPictures();
 
@@ -358,4 +353,31 @@ buttonUploadSubmit.addEventListener('click', function (evt) {
   if (!checkInputsValidity()) {
     evt.preventDefault();
   }
+});
+
+scalePinHandler.addEventListener('mousedown', function (evt) {
+  evt.preventDefault();
+
+  var startCoordX = evt.clientX;
+  var calculateOffsetX = scalePinHandler.offsetLeft;
+  var scaleLineWidth = scaleLine.clientWidth;
+
+  var onMouseMove = function (moveEvt) {
+    moveEvt.preventDefault();
+    calculateOffsetX -= startCoordX - moveEvt.clientX;
+    if (calculateOffsetX < 0) {
+      calculateOffsetX = 0;
+    } else if (calculateOffsetX > scaleLineWidth) {
+      calculateOffsetX = scaleLineWidth;
+    }
+    startCoordX = moveEvt.clientX;
+    setupEffectLevel(Math.floor(calculateOffsetX / scaleLineWidth * 100));
+  };
+
+  var onMouseUp = function () {
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  };
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
 });
