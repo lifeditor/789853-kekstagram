@@ -11,11 +11,11 @@
       var image = element.querySelector(PICTURE + '__img');
 
       image.src = picture.url;
-      image.id = picture.id;
+      image.id = element.id;
       element.querySelector(PICTURE + '__stat--likes')
-    .textContent = picture.likes;
+        .textContent = picture.likes;
       element.querySelector(PICTURE + '__stat--comments')
-    .textContent = picture.comments.length;
+        .textContent = picture.comments.length;
       return element;
     },
 
@@ -23,7 +23,7 @@
       var textNode = document.createTextNode(comment);
 
       element.querySelector('.social__picture').src =
-    'img/avatar-' + window.util.generateRandom(1, AVATAR_COUNT) + '.svg';
+        'img/avatar-' + window.util.generateRandom(1, AVATAR_COUNT) + '.svg';
       element.appendChild(textNode);
       return element;
     }

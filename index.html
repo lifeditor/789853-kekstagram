@@ -30,7 +30,7 @@
         <div class="img-upload__wrapper">
           <h2 class="img-upload__title visually-hidden">Загрузка фотографии</h2>
 
-          <form class="img-upload__form" id="upload-select-image" method="post" enctype="multipart/form-data" autocomplete="off">
+          <form class="img-upload__form" id="upload-select-image" method="post" enctype="multipart/form-data" autocomplete="off" action="https://js.dump.academy/kekstagram">
 
             <fieldset class="img-upload__start">
               <input type="file" id="upload-file" class="img-upload__input visually-hidden" name="filename" required>
@@ -65,7 +65,7 @@
                 <fieldset class="img-upload__effects effects">
                   <ul class="effects__list">
                     <li class="effects__item">
-                      <input type="radio" class="effects__radio visually-hidden" name="effect" id="effect-none" value="none">
+                      <input type="radio" class="effects__radio visually-hidden" name="effect" id="effect-none" value="none" checked>
                       <label for="effect-none" class="effects__label">
                         <span class="effects__preview effects__preview--none">Превью фото без эффекта</span>
                         Оригинал
@@ -100,7 +100,7 @@
                       </label>
                     </li>
                     <li class="effects__item">
-                      <input type="radio" class="effects__radio visually-hidden" name="effect" id="effect-heat" value="heat" checked>
+                      <input type="radio" class="effects__radio visually-hidden" name="effect" id="effect-heat" value="heat">
                       <label for="effect-heat" class="effects__label">
                         <span class="effects__preview effects__preview--heat">Превью эффекта Зной</span>
                         Зной
@@ -202,22 +202,24 @@
     <div class="img-upload__message img-upload__message--error error hidden">Ошибка загрузки файла
       <div class="error__links">
         <a class="error__link" href="#">Попробовать снова</a>
-        <a class="error__link" href="#">Загрузить другой файл</a>
+        <a class="error__link hidden" href="#">Загрузить другой файл</a>
       </div>
     </div>
   </template>
 
   <template id="social__comment">
-    <li class="social__comment social__comment--text">
+    <li class="social__comment social__comment--text visually-hidden">
       <img class="social__picture" src="" alt="Аватар комментатора фотографии" width="35" height="35">
     </li>
   </template>
 
   <script src="js/util.js"></script>
+  <script src="js/error.js"></script>
   <script src="js/data.js"></script>
   <script src="js/gallery.js"></script>
   <script src="js/picture.js"></script>
   <script src="js/preview.js"></script>
+  <script src="js/backend.js"></script>
   <script src="js/form.js"></script>
   <script src="js/main.js"></script>
 
