@@ -23,6 +23,7 @@
   };
 
   var popup = document.querySelector('.img-upload__overlay');
+  var form = document.querySelector('.img-upload__form');
   var fileInput = document.querySelector('.img-upload__input');
   var buttonHide = popup.querySelector('.img-upload__cancel');
   var preview = popup.querySelector('.img-upload__preview');
@@ -38,7 +39,6 @@
   var hashtagInput = popup.querySelector('.text__hashtags');
   var buttonSubmit = popup.querySelector('.img-upload__submit');
   var popupInputs = [hashtagInput, commentInput];
-  var resize = RESIZE_MAX;
   var cssStyle = {};
 
   var setStyle = function (element, style) {
@@ -46,12 +46,15 @@
   };
 
   var setEffectLevel = function (level) {
+    if (preview.classList.length === 1) {
+      preview.classList.add(DEFAULT_EFFECT);
+    }
     var ifOriginal = preview.classList.contains(DEFAULT_EFFECT);
     var css = filterStyle[preview.classList[1]];
 
     scaleInput.setAttribute('value', level);
-    scaleLevel.style = 'width: ' + level + '%;';
-    scalePinHandler.style = 'left: ' + level + '%;';
+    scaleLevel.style.width = level + '%';
+    scalePinHandler.style.left = level + '%';
     cssStyle.filter = (ifOriginal) ? css.filter :
       css.filter + (level / css.div * css.mult + css.add) + css.eofl;
     scale.classList // для оригинального изображения скрываем ползунок
@@ -66,19 +69,21 @@
   };
 
   var hide = function () {
-    resize = RESIZE_MAX;
+    window.error.hide();
     fileInput.value = ''; // cброс значения поля для правильной обработки change
+    for (var i = 0; i < popupInputs.length; i++) {
+      popupInputs[i].style = '';
+      popupInputs[i].value = '';
+      popupInputs[i].setCustomValidity('');
+    }
     preview.classList.remove(preview.classList[1]);
     popup.classList.add('hidden');
     document.removeEventListener('keydown', onEscPress);
-    commentInput.style = '';
-    hashtagInput.style = '';
   };
 
   window.form = {
 
     show: function () {
-      preview.classList.add(DEFAULT_EFFECT);
       setPreviewSize(RESIZE_MAX);
       setEffectLevel(DEFAULT_EFFECT_LEVEL);
       popup.classList.remove('hidden');
@@ -92,6 +97,8 @@
   };
 
   var onResizeClick = function (evt) {
+    var resize = parseInt(resizeInput.value, 10);
+
     resize += (evt.target === resizePlus) ? RESIZE_STEP : -RESIZE_STEP;
     if (resize > RESIZE_MAX) {
       resize = RESIZE_MAX;
@@ -212,4 +219,21 @@
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
   });
+
+  form.addEventListener('submit', function (evt) {
+    var successHandler = function () {
+      window.error.hide();
+      hide();
+    };
+
+    var errorHandler = function (errorMessage) {
+      window.error.show(errorMessage);
+    };
+
+    var oData = new FormData(form);
+    window.backend.upload(successHandler, errorHandler, oData);
+    evt.preventDefault();
+
+  });
+
 })();
