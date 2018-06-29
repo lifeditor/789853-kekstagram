@@ -1,10 +1,14 @@
 'use strict';
 
 (function () {
+
   var PICTURE_COUNT = 25;
   var COMMENT_COUNT = 2;
-  var LIKES_MIN = 15;
-  var LIKES_MAX = 200;
+
+  var Like = {
+    MIN: 15,
+    MAX: 200
+  };
 
   var descriptions = [
     'Тестим новую камеру!',
@@ -28,20 +32,12 @@
   var commentMaxIndex = comments.length - 1;
 
   var generateUniqueComment = function (arrays) {
-    var arrayCount = arrays.length;
     var string;
-    var flag;
 
     do {
-      flag = false;
       string = comments[window.util.generateRandom(0, commentMaxIndex)];
-      for (var i = 0; i < arrayCount; i++) {
-        if (arrays[i] === string) {
-          flag = true;
-          break;
-        }
-      }
-    } while (flag);
+    } while (arrays.indexOf(string) !== -1);
+
     return string;
   };
 
@@ -58,7 +54,7 @@
         }
         pictureObj.id = i;
         pictureObj.url = 'photos/' + (i + 1) + '.jpg';
-        pictureObj.likes = window.util.generateRandom(LIKES_MIN, LIKES_MAX);
+        pictureObj.likes = window.util.generateRandom(Like.MIN, Like.MAX);
         pictureObj.comments = strings;
         pictureObj.description =
       descriptions[window.util.generateRandom(0, descLength - 1)];

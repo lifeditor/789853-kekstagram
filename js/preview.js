@@ -2,66 +2,73 @@
 
 (function () {
 
-  var BIG_PICTURE = '.big-picture';
-  var CSS_PREFIX = '.social';
-  var SOCIAL_TEMPLATE = '#social__comment';
-  var VISUALLY_HIDDEN = 'visually-hidden';
-  var MODAL_OPEN = 'modal-open';
-  var HIDDEN = 'hidden';
   var COMMENT_SHOW_MAX = 5;
+  var DESCRIPTION_ERROR = 'Описание фотографии не получено с сервера!';
 
-  var bigPicture = document.querySelector(BIG_PICTURE);
+  var Css = {
+    BIG_PICTURE: '.big-picture',
+    PREFIX: '.social',
+    TEMPLATE: '#social__comment',
+    VISUALLY_HIDDEN: 'visually-hidden',
+    MODAL_OPEN: 'modal-open',
+    HIDDEN: 'hidden'
+  };
+
+  var bigPicture = document.querySelector(Css.BIG_PICTURE);
   var buttonHide = bigPicture.querySelector('.big-picture__cancel');
-  var commentList = bigPicture.querySelector(CSS_PREFIX + '__comments');
+  var commentList = bigPicture.querySelector(Css.PREFIX + '__comments');
   var buttonShowMore = bigPicture.querySelector('.social__loadmore');
 
   var loadComment = function () {
     var commentCount = commentList.children.length;
     var commentShow = commentCount -
-      commentList.querySelectorAll('.' + VISUALLY_HIDDEN).length;
+      commentList.querySelectorAll('.' + Css.VISUALLY_HIDDEN).length;
 
     commentShow += COMMENT_SHOW_MAX;
     if (commentShow > commentCount) {
       commentShow = commentCount;
     }
     for (var i = 0; i < commentShow; i++) {
-      commentList.children[i].classList.remove(VISUALLY_HIDDEN);
+      commentList.children[i].classList.remove(Css.VISUALLY_HIDDEN);
     }
     buttonShowMore.classList
-      .toggle(VISUALLY_HIDDEN, commentCount < commentShow + 1);
+      .toggle(Css.VISUALLY_HIDDEN, commentCount < commentShow + 1);
+    bigPicture.querySelector('.comments-show').textContent = commentShow;
   };
 
   var hide = function () {
-    bigPicture.classList.add(HIDDEN);
-    bigPicture.classList.remove(MODAL_OPEN);
+    bigPicture.classList.add(Css.HIDDEN);
+    bigPicture.classList.remove(Css.MODAL_OPEN);
     document.removeEventListener('keydown', onEscPress);
   };
 
   window.preview = {
 
-    show: function () {
-      loadComment();
-      bigPicture.classList.remove(HIDDEN);
-      bigPicture.classList.add(MODAL_OPEN);
-      document.addEventListener('keydown', onEscPress);
-    },
-
     setup: function (picture) {
-      bigPicture.querySelector(BIG_PICTURE + '__img')
+      bigPicture.querySelector(Css.BIG_PICTURE + '__img')
         .children[0].src = picture.url;
       bigPicture.querySelector('.likes-count')
         .textContent = picture.likes;
       bigPicture.querySelector('.comments-count')
         .textContent = picture.comments.length;
-      bigPicture.querySelector(CSS_PREFIX + '__caption')
-        .textContent = picture.description;
+      bigPicture.querySelector(Css.PREFIX + '__caption')
+        .textContent = picture.description || DESCRIPTION_ERROR;
 
       while (commentList.firstChild) {
         commentList.removeChild(commentList.firstChild);
       }
       commentList
-        .appendChild(window.gallery.create(picture.comments, SOCIAL_TEMPLATE));
+        .appendChild(window.gallery.create(picture.comments, Css.TEMPLATE));
     },
+
+    show: function (picture) {
+      window.preview.setup(picture);
+      loadComment();
+      bigPicture.classList.remove(Css.HIDDEN);
+      bigPicture.classList.add(Css.MODAL_OPEN);
+      document.addEventListener('keydown', onEscPress);
+    }
+
   };
 
   var onEscPress = function (evt) {

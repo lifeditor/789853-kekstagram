@@ -2,27 +2,21 @@
 
 (function () {
 
-  var ESC_KEYCODE = 27;
-  var ENTER_KEYCODE = 13;
+  var Key = {
+    ESC: 27,
+    ENTER: 13
+  };
 
   window.util = {
-    isEscEvent: function (evt, action, activeElements) {
-      if (evt.keyCode === ESC_KEYCODE) {
-        var flag = true;
-        for (var i = 0; i < activeElements.length; i++) {
-          if (document.activeElement === activeElements[i]) {
-            flag = false;
-            break;
-          }
-        }
-        if (flag) {
-          action();
-        }
+    isEscEvent: function (evt, action, inputs) {
+      if (evt.keyCode === Key.ESC &&
+          inputs.indexOf(document.activeElement) === -1) {
+        action();
       }
     },
 
     isEnterEvent: function (evt, action) {
-      if (evt.keyCode === ENTER_KEYCODE) {
+      if (evt.keyCode === Key.ENTER) {
         action();
       }
     },
