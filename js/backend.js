@@ -2,9 +2,12 @@
 
 (function () {
 
-  var RESPONSE_OK = 200;
-  var UPLOAD_URL = 'https://js.dump.academy/kekstagram';
-  var URL = 'https://js.dump.academy/kekstagram/data';
+  var SUCCESS_CODE = 200;
+
+  var Url = {
+    UPLOAD: 'https://js.dump.academy/kekstagram',
+    LOAD: 'https://js.dump.academy/kekstagram/data'
+  };
 
   var createRequest = function (onLoad, onError, method, url) {
     var xhr = new XMLHttpRequest();
@@ -12,7 +15,7 @@
     xhr.responseType = 'json';
 
     xhr.addEventListener('load', function () {
-      if (xhr.status === RESPONSE_OK) {
+      if (xhr.status === SUCCESS_CODE) {
         onLoad(xhr.response);
       } else {
         onError('Статус ответа: ' + xhr.status + ' ' + xhr.statusText);
@@ -34,12 +37,12 @@
   window.backend = {
 
     load: function (onLoad, onError) {
-      var xhr = createRequest(onLoad, onError, 'GET', URL);
+      var xhr = createRequest(onLoad, onError, 'GET', Url.LOAD);
       xhr.send();
     },
 
     upload: function (onLoad, onError, Data) {
-      var xhr = createRequest(onLoad, onError, 'POST', UPLOAD_URL);
+      var xhr = createRequest(onLoad, onError, 'POST', Url.UPLOAD);
       xhr.send(Data);
     }
 
