@@ -2,42 +2,39 @@
 
 (function () {
 
-  var ERROR_SELECTOR = '.img-upload__message--error';
+  var ERROR_CLASS = 'img-upload__message--error';
   var HIDDEN = 'hidden';
+  var errorPopup;
 
-  var hideErrorPopup = function () {
-    var errorCount = document.querySelectorAll(ERROR_SELECTOR).length;
-    if (errorCount > 0) {
-      document.querySelector(ERROR_SELECTOR)
-        .classList.add(HIDDEN);
+  var onHideClick = function () {
+    if (errorPopup) {
+      errorPopup.classList.add(HIDDEN);
     }
   };
 
   window.error = {
 
     show: function (errorMessage) {
-      var elementTemplate = document.querySelector('#picture')
-        .content
-        .querySelector(ERROR_SELECTOR);
-      var element = elementTemplate.cloneNode(true);
+      errorPopup = window.util
+        .getElementTemplate('#picture', ERROR_CLASS).cloneNode(true);
 
-      element.classList.remove(HIDDEN);
-      element.style =
+      errorPopup.classList.remove(HIDDEN);
+      errorPopup.style =
         'z-index: 100; margin: 0 auto; text-align: center; background-color: maroon;';
-      element.style.position = 'absolute';
-      element.style.top = '50%';
-      element.style.left = '0px';
-      element.style.fontSize = '20px';
-      element.children[0].addEventListener('click', hideErrorPopup);
+      errorPopup.style.position = 'absolute';
+      errorPopup.style.top = '50%';
+      errorPopup.style.left = '0px';
+      errorPopup.style.fontSize = '20px';
+      errorPopup.children[0].addEventListener('click', onHideClick);
       var textNode = document
-        .createTextNode(element.firstChild.textContent + '. ' + errorMessage);
-      element.replaceChild(textNode, element.firstChild);
-      document.body.insertAdjacentElement('afterbegin', element);
+        .createTextNode(errorPopup.firstChild.textContent + '. ' + errorMessage);
+      errorPopup.replaceChild(textNode, errorPopup.firstChild);
+      document.body.insertAdjacentElement('afterbegin', errorPopup);
 
     },
 
     hide: function () {
-      hideErrorPopup();
+      onHideClick();
     }
 
   };

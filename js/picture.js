@@ -3,29 +3,24 @@
 (function () {
 
   var AVATAR_COUNT = 6;
-  var PICTURE = '.picture';
 
   window.picture = {
 
-    setup: function (picture, element) {
-      var image = element.querySelector(PICTURE + '__img');
+    setup: function (picture, imageElement, pictureInfo) {
 
-      image.src = picture.url;
-      image.id = element.id;
-      element.querySelector(PICTURE + '__stat--likes')
-        .textContent = picture.likes;
-      element.querySelector(PICTURE + '__stat--comments')
-        .textContent = picture.comments.length;
-      return element;
+      imageElement.src = picture.url;
+      pictureInfo.children[0].textContent = picture.likes;
+      pictureInfo.children[1].textContent = picture.comments.length;
+
     },
 
-    setupComment: function (comment, element) {
+    setupComment: function (comment, imageElement) {
       var textNode = document.createTextNode(comment);
 
-      element.querySelector('.social__picture').src =
+      imageElement.src =
         'img/avatar-' + window.util.generateRandom(1, AVATAR_COUNT) + '.svg';
-      element.appendChild(textNode);
-      return element;
+      imageElement.parentElement.appendChild(textNode);
+
     }
 
   };
