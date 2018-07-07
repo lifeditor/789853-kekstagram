@@ -2,7 +2,7 @@
 
 (function () {
 
-  var Scale = {
+  var Size = {
     MIN: 25,
     MAX: 100,
     STEP: 25
@@ -10,7 +10,10 @@
 
   var Effect = {
     DEFAULT: 'effects__preview--none',
-    DEFAULT_LEVEL: 100
+    MAX: 100,
+    BLUR_MAX: 3,
+    BRIGHTNESS_MIN: 1,
+    BRIGHTNESS_MAX: 3
   };
 
   var Description = {
@@ -21,7 +24,8 @@
   var Hashtag = {
     CHAR: '#',
     DIVIDER: ' ',
-    MAX_LENGTH: 20
+    MAX_LENGTH: 20,
+    MAX_COUNT: 5
   };
 
   var filterStyle = {
@@ -29,19 +33,20 @@
       return 'filter: none;';
     }},
     'effects__preview--chrome': {filter: function (value) {
-      return 'filter: grayscale(' + (value / 100) + ');';
+      return 'filter: grayscale(' + (value / Effect.MAX) + ');';
     }},
     'effects__preview--sepia': {filter: function (value) {
-      return 'filter: sepia(' + (value / 100) + ');';
+      return 'filter: sepia(' + (value / Effect.MAX) + ');';
     }},
     'effects__preview--marvin': {filter: function (value) {
       return 'filter: invert(' + value + '%);';
     }},
     'effects__preview--phobos': {filter: function (value) {
-      return 'filter: blur(' + (value / 100 * 3) + 'px);';
+      return 'filter: blur(' + (value / Effect.MAX * Effect.BLUR_MAX) + 'px);';
     }},
     'effects__preview--heat': {filter: function (value) {
-      return 'filter: brightness(' + (value / 100 * 2 + 1) + ');';
+      return 'filter: brightness(' + (value / Effect.MAX *
+        (Effect.BRIGHTNESS_MAX - Effect.BRIGHTNESS_MIN) + Effect.BRIGHTNESS_MIN) + ');';
     }}
   };
 
@@ -56,13 +61,15 @@
   var scalePinHandler = scale.querySelector('.scale__pin');
   var scaleLevel = scale.querySelector('.scale__level');
   var scaleInput = scale.querySelector('.scale__value');
-  var resizeMinus = popup.querySelector('.resize__control--minus');
-  var resizePlus = popup.querySelector('.resize__control--plus');
-  var resizeInput = popup.querySelector('.resize__control--value');
+  var buttonSizeMinus = popup.querySelector('.resize__control--minus');
+  var buttonSizePlus = popup.querySelector('.resize__control--plus');
+  var sizeInput = popup.querySelector('.resize__control--value');
   var hashtagInput = popup.querySelector('.text__hashtags');
   var buttonSubmit = popup.querySelector('.img-upload__submit');
   var effectList = popup.querySelector('.effects__list');
-  var popupInputs = [hashtagInput, commentInput];
+  var defaultEffectInput = popup.querySelector('input[id="effect-none"]');
+  var formInputs = [hashtagInput, commentInput];
+  var previewImage = preview.children[0];
   var cssStyle = {};
 
   var setStyle = function (element, style) {
@@ -81,20 +88,20 @@
   };
 
   var setPreviewSize = function (size) {
-    resizeInput.setAttribute('value', size + '%');
-    cssStyle.transform = 'transform: scale(' + (size / 100) + ');';
+    sizeInput.setAttribute('value', size + '%');
+    cssStyle.transform = 'transform: scale(' + (size / Size.MAX) + ');';
     setStyle(preview, cssStyle);
   };
 
-  var hide = function () {
+  var onButtonHideClick = function () {
     window.error.hide();
     fileInput.value = '';
-    popupInputs.forEach(function (value) {
+    formInputs.forEach(function (value) {
       value.style = '';
       value.value = '';
       value.setCustomValidity('');
     });
-    popup.querySelector('input[id="effect-none"]').checked = true;
+    defaultEffectInput.checked = true;
     preview.classList.remove(preview.classList[1]);
     popup.classList.add('hidden');
     document.removeEventListener('keydown', onEscPress);
@@ -103,8 +110,9 @@
   window.form = {
 
     show: function () {
-      setPreviewSize(Scale.MAX);
-      setEffectLevel(Effect.DEFAULT_LEVEL);
+      previewImage.src = window.URL.createObjectURL(fileInput.files[0]);
+      setPreviewSize(Size.MAX);
+      setEffectLevel(Effect.MAX);
       popup.classList.remove('hidden');
       document.addEventListener('keydown', onEscPress);
     },
@@ -112,24 +120,24 @@
   };
 
   var onEscPress = function (evt) {
-    window.util.isEscEvent(evt, hide, popupInputs);
+    window.util.isEscEvent(evt, onButtonHideClick, formInputs);
   };
 
-  var onResizeClick = function (evt) {
-    var resize = parseInt(resizeInput.value, 10);
+  var onButtonSizeClick = function (evt) {
+    var resize = parseInt(sizeInput.value, 10);
 
-    resize += (evt.target === resizePlus) ? Scale.STEP : -Scale.STEP;
-    if (resize > Scale.MAX) {
-      resize = Scale.MAX;
-    } else if (resize < Scale.MIN) {
-      resize = Scale.MIN;
+    resize += (evt.target === buttonSizePlus) ? Size.STEP : -Size.STEP;
+    if (resize > Size.MAX) {
+      resize = Size.MAX;
+    } else if (resize < Size.MIN) {
+      resize = Size.MIN;
     }
     setPreviewSize(resize);
   };
 
-  buttonHide.addEventListener('click', hide);
-  resizeMinus.addEventListener('click', onResizeClick);
-  resizePlus.addEventListener('click', onResizeClick);
+  buttonHide.addEventListener('click', onButtonHideClick);
+  buttonSizeMinus.addEventListener('click', onButtonSizeClick);
+  buttonSizePlus.addEventListener('click', onButtonSizeClick);
 
   effectList.addEventListener('click', function (evt) {
     var target = evt.target;
@@ -137,7 +145,7 @@
     if (target.classList.contains('effects__radio')) {
       preview.classList.remove(preview.classList[1]);
       preview.classList.add('effects__preview--' + target.value);
-      setEffectLevel(Effect.DEFAULT_LEVEL);
+      setEffectLevel(Effect.MAX);
     }
   });
 
@@ -154,13 +162,15 @@
           uniques.push(hashtag);
         }
         var hashtagLength = hashtag.length;
+
         if (hashtagLength === 0) {
           errorString += 'Найден лишний пробел\n\r';
         } else if (hashtag[0] !== Hashtag.CHAR) {
-          errorString += hashtag + ' - Хеш-тег должен начинаться с #\n\r';
+          errorString += hashtag + ' - Хеш-тег должен начинаться с ' +
+            Hashtag.CHAR + '\n\r';
         } else if (hashtagLength > Hashtag.MAX_LENGTH) {
           errorString += hashtag + ' - Длина хэш-тега превышает ' +
-           Hashtag.MAX_LENGTH + ' символов\n\r';
+            Hashtag.MAX_LENGTH + ' символов\n\r';
         } else if (hashtag === Hashtag.CHAR) {
           errorString += hashtag + ' - Хеш-тег введен неправильно\n\r';
         } else if (hashtag.indexOf(Hashtag.CHAR, 1) > 0) {
@@ -170,47 +180,52 @@
 
       if (uniques.length < hashtagCount) {
         errorString += 'Найдены повторяющиеся хэш-теги\n\r';
-      } else if (hashtagCount > 5) {
-        errorString += 'Допускается использование не более 5 хэш-тегов\n\r';
+      } else if (hashtagCount > Hashtag.MAX_COUNT) {
+        errorString += 'Допускается использование не более ' +
+          Hashtag.MAX_COUNT + ' хэш-тегов\n\r';
       }
     }
     return errorString;
   };
 
-  var checkInputsValidity = function () {
+  var checkValidity = function () {
     var flag = true;
 
-    popupInputs.forEach(function (value) {
+    formInputs.forEach(function (value) {
       if (!value.checkValidity()) {
         value.style = 'border: 3px solid red;';
-        flag = false;
       } else {
         value.style = '';
       }
     });
+
+    try {
+      flag = form.reportValidity();
+    } catch (err) {
+      // метод reportValidity() не поддерживается браузером
+      flag = form.checkValidity();
+    }
     return flag;
   };
 
-  hashtagInput.addEventListener('input', function () {
-    hashtagInput.setCustomValidity(checkHashtagErrors(hashtagInput.value));
-    checkInputsValidity();
+  buttonSubmit.addEventListener('click', function (evt) {
+    if (!checkValidity()) {
+      evt.preventDefault();
+    }
   });
 
-  commentInput.addEventListener('input', function (evt) {
+  form.addEventListener('input', function (evt) {
     var target = evt.target;
 
-    if (target.value.length > Description.MAX_LENGTH) {
+    if (target === hashtagInput) {
+      target.setCustomValidity(checkHashtagErrors(target.value));
+    } else if (target.value.length > Description.MAX_LENGTH) {
       target.setCustomValidity(Description.ERROR_LENGTH);
     } else {
       target.setCustomValidity('');
     }
-    checkInputsValidity();
-  });
+    checkValidity();
 
-  buttonSubmit.addEventListener('click', function (evt) {
-    if (!checkInputsValidity()) {
-      evt.preventDefault();
-    }
   });
 
   scalePinHandler.addEventListener('mousedown', function (evt) {
@@ -229,7 +244,7 @@
         calculateOffsetX = scaleLineWidth;
       }
       startCoordX = moveEvt.clientX;
-      setEffectLevel(Math.floor(calculateOffsetX / scaleLineWidth * 100));
+      setEffectLevel(Math.floor(calculateOffsetX / scaleLineWidth * Effect.MAX));
     };
 
     var onMouseUp = function () {
@@ -243,7 +258,7 @@
   form.addEventListener('submit', function (evt) {
     var successHandler = function () {
       window.error.hide();
-      hide();
+      onButtonHideClick();
     };
 
     var errorHandler = function (errorMessage) {

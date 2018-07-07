@@ -5,6 +5,7 @@
   var PICTURE_TEMPLATE = '#picture';
   var POPULAR_COUNT = 10;
   var ACTIVE_BUTTON_CLASS = 'img-filters__button--active';
+  var PICTURE_LINK = 'picture__link';
 
   var gallery = document.querySelector('.pictures');
 
@@ -56,23 +57,22 @@
 
   window.gallery = {
 
-    create: function (arrays, templateID) {
-      var selector = (templateID === PICTURE_TEMPLATE) ?
-        '.picture__link' : '.social__comment';
-      var elementTemplate = document.querySelector(templateID)
-        .content
-        .querySelector(selector);
+    create: function (arrays, template) {
       var fragment = document.createDocumentFragment();
+      var isPictureTemplate = template.classList.contains(PICTURE_LINK);
 
       arrays.forEach(function (value, index) {
-        var element = elementTemplate.cloneNode(true);
+        var element = template.cloneNode(true);
+        var imageElement = element.children[0];
 
-        element.id = index;
-        fragment.appendChild(
-            (templateID === PICTURE_TEMPLATE) ?
-              window.picture.setup(value, element) :
-              window.picture.setupComment(value, element)
-        );
+        if (isPictureTemplate) {
+          imageElement.id = index;
+          window.picture.setup(value, imageElement, element.children[1]);
+        } else {
+          window.picture.setupComment(value, imageElement);
+        }
+
+        fragment.appendChild(element);
       });
 
       return fragment;
@@ -87,13 +87,16 @@
     },
 
     update: function (pictures) {
-      var pictureLinkCollection = gallery.querySelectorAll('.picture__link');
+      var pictureLinkCollection = gallery.querySelectorAll('.' + PICTURE_LINK);
 
       [].forEach.call(pictureLinkCollection, function (pictureLink) {
         gallery.removeChild(pictureLink);
       });
+
       gallery
-        .appendChild(window.gallery.create(pictures, '#picture'));
+        .appendChild(window.gallery
+          .create(pictures,
+              window.util.getElementTemplate(PICTURE_TEMPLATE, PICTURE_LINK)));
 
     }
   };
