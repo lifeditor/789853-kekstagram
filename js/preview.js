@@ -41,7 +41,7 @@
       .textContent = commentShow;
   };
 
-  var hide = function () {
+  var onButtonHideClick = function () {
     bigPicture.classList.add(Css.HIDDEN);
     bigPicture.classList.remove(Css.MODAL_OPEN);
     document.removeEventListener('keydown', onEscPress);
@@ -79,10 +79,10 @@
   };
 
   var onEscPress = function (evt) {
-    window.util.isEscEvent(evt, hide, [commentInput]);
+    window.util.isEscEvent(evt, onButtonHideClick, [commentInput]);
   };
 
-  buttonHide.addEventListener('click', hide);
+  buttonHide.addEventListener('click', onButtonHideClick);
 
   buttonShowMore.addEventListener('click', function () {
     loadComment();
