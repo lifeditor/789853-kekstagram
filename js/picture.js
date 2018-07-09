@@ -9,8 +9,8 @@
     setup: function (picture, imageElement, pictureInfo) {
 
       imageElement.src = picture.url;
-      pictureInfo.children[0].textContent = picture.likes;
-      pictureInfo.children[1].textContent = picture.comments.length;
+      pictureInfo.children[0].textContent = picture.comments.length;
+      pictureInfo.children[1].textContent = picture.likes;
 
     },
 
