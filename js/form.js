@@ -192,11 +192,7 @@
     var flag = true;
 
     formInputs.forEach(function (value) {
-      if (!value.checkValidity()) {
-        value.style = 'border: 3px solid red;';
-      } else {
-        value.style = '';
-      }
+      value.style = value.checkValidity() ? '' : 'border: 3px solid red;';
     });
 
     try {
